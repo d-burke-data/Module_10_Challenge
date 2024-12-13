@@ -29,16 +29,13 @@ Measurement = Base.classes.measurement
 
 session = Session(engine)
 most_recent_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()
-most_recent_date
 session.close()
 
 date_format = "%Y-%m-%d"
 
 end_date_string = most_recent_date[0]
 end_datetime = dt.datetime.strptime(end_date_string, date_format)
-start_datetime = dt.datetime(year=end_datetime.year - 1,
-                            month=end_datetime.month,
-                            day=end_datetime.day)
+start_datetime = end_datetime - dt.timedelta(days=365)
 
 start_date_last_12_months = start_datetime.strftime(date_format)
 end_date_last_12_months = end_datetime.strftime(date_format)
@@ -66,6 +63,7 @@ def get_observations_by_date(observation_fields, start_date, end_date, most_acti
 
     return jsonify(dict(last_year_query))
 
+# Retrieve the minimum, average, and maximum tempteratures between a given start date and end date
 def get_statistics_by_date(start_date, end_date):
     selection = [func.min(Measurement.tobs),
                  func.avg(Measurement.tobs),
@@ -73,8 +71,8 @@ def get_statistics_by_date(start_date, end_date):
     
     session = Session(engine)
     last_year_query = session.query(*selection).\
-    filter(Measurement.date>=start_date).\
-    filter(Measurement.date<=end_date).all()
+            filter(Measurement.date>=start_date).\
+            filter(Measurement.date<=end_date).all()
     session.close()
 
     stats = {}
